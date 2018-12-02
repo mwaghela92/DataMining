@@ -15,6 +15,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn import svm
 from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import GridSearchCV
 
 #### Define directory and data paths
 Working_Directory='/Users/mayur/Documents/GitHub/IEE520_Project/DataMining/'
@@ -52,10 +53,10 @@ def ACCURACY_EVAL(y_true, y_pred):
     print(accuracy_score(y_true, y_pred))
     print(confusion_matrix(y_true, y_pred))
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-    print(tn, fp)
-    print(fn, tp)
+    mean_acc=((fp/(tn+fp)) + (fn/(fn+tp)))/2
+    print((100 - mean_acc *100))
     
-    
+def CLASS_SELECTION
     
     
     
@@ -82,7 +83,7 @@ print('New_Train class balance check:\n',New_Train['y'].value_counts())
 
 
 
-##### separate from the dataframe and splitting train and test
+##### separate target from the dataframe and splitting train and test
 y = New_Train['y']
 X = New_Train.drop('y', axis = 1)
 """
@@ -93,14 +94,21 @@ X_train, X_test, y_train, y_test = train_test_split(X, y,
                                 test_size=0.33, random_state=42)
 
 
-clf = RandomForestClassifier(n_estimators=1000, max_depth=50,
-                              random_state=10)
-clf = svm.SVC()
+rf = RandomForestClassifier()
 
-clf = MLPClassifier(hidden_layer_sizes=(500, 500, 500), solver='sgd', 
-                    verbose= True, max_iter=2000, learning_rate_init=0.00000001 , 
-                    learning_rate = 'adaptive')
+parameters = {'n_estimators': [10, 50, 100, 1000], 
+              'max_depth': [10, 100, None],
+              'max_features': ['auto', 'sqrt', 'log2', None]}
 
+clf = GridSearchCV(rf, parameters, cv=5)
+
+
+
+#clf = svm.SVC(C=1000, cache_size=2000)
+
+#clf = MLPClassifier(hidden_layer_sizes=(500, 500, 500), solver='logistic', 
+ #                   verbose= True, max_iter=200, learning_rate_init=0.00001)
+#
 clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 
