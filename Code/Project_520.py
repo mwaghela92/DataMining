@@ -16,6 +16,19 @@ from sklearn.metrics import confusion_matrix
 from sklearn import svm
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import GridSearchCV
+import matplotlib.pyplot as plt
+import seaborn as sn
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.ensemble import AdaBoostClassifier
+
+####select classifier to run the code
+#classifier = 'random_forest'
+#classifier = 'svm'
+#classifier = 'MLPClassifier'
+#classifier = 'gaussian_naive_bayes'
+#classifiers = ['gaussian_naive_bayes', 'random_forest', 'svm', 'MLPClassifier' ]
+classifiers = ['random_forest']
 
 #### Define directory and data paths
 Working_Directory='/Users/mayur/Documents/GitHub/IEE520_Project/DataMining/'
@@ -49,14 +62,55 @@ def ONE_HOT_ENCODING(dataframe, column, name):
     return dataframe
 
 
-def ACCURACY_EVAL(y_true, y_pred):
-    print(accuracy_score(y_true, y_pred))
+def ACCURACY_EVAL(y_true, y_pred, classifier):
+    ter = (100 - accuracy_score(y_true, y_pred) *100)
+    print('Total error rate:', ter)
     print(confusion_matrix(y_true, y_pred))
+    cm = confusion_matrix(y_true, y_pred)
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
     mean_acc=((fp/(tn+fp)) + (fn/(fn+tp)))/2
-    print((100 - mean_acc *100))
+    print('Balanced error rate', (mean_acc *100))
+    df_cm = pd.DataFrame(cm)
+    plt.figure(figsize = (10,7))
+    sn.heatmap(df_cm, annot=True, fmt='g')
+    Title = (classifier + '\nBalanced Error Rate:' + str(mean_acc *100) +
+              '\nTotal error rate: ' + str(ter))
+    plt.title(Title)
+    my_plot = plt.gcf()
+    plt.savefig(Working_Directory + 'Results/' + classifier +'_cm.png')
     
-def CLASS_SELECTION
+def CLASSIFIER_SELECTION(classifier):
+    """This function returns the initialization and parameter 
+        dictionary of selected 'classifier'"""
+        
+    if classifier == 'random_forest':
+        c = RandomForestClassifier(verbose = True, random_state = 235)
+        parameters = {'n_estimators': [50, 100, 200], 
+              'max_depth': [2,5,10, 30, None],
+              'max_features': ['auto', 'sqrt', 'log2', None]
+                      }
+    if classifier == 'svm':
+        c = svm.SVC(verbose = True)
+        """
+        parameters = {'C' : [0.01, 0.1, 1, 10, 100],
+                      'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
+                      'gamma': ['auto', 'scale'],
+                      'cache_size' : [10, 100],
+                      }"""
+        parameters = {'C' : [0.1, 1],
+                      'kernel': ['rbf'],
+                      }
+    if classifier == 'MLPClassifier':
+        c = MLPClassifier(learning_rate = 'adaptive', verbose = True)
+        parameters = {'hidden_layer_sizes':[(100,), (100,100)],
+                       'solver':['lbfgs','sgd', 'adam'],
+                       'alpha': [0.001, 0.0001, 0.1]
+                       }
+    if classifier == 'gaussian_naive_bayes':
+        c = GaussianNB()
+        parameters = {}
+        
+    return (c,parameters)
     
     
     
@@ -86,42 +140,50 @@ print('New_Train class balance check:\n',New_Train['y'].value_counts())
 ##### separate target from the dataframe and splitting train and test
 y = New_Train['y']
 X = New_Train.drop('y', axis = 1)
+scaler = MinMaxScaler()
+X_scaled = scaler.fit(X).transform(X)
 """
 y = Train['y']
 X = Train.drop('y', axis = 1)
 """
 X_train, X_test, y_train, y_test = train_test_split(X, y, 
-                                test_size=0.33, random_state=42)
+                                test_size=0.20, random_state=42)
 
+X_train_s, X_test_s, y_train_s, y_test_s = train_test_split(X_scaled, y, 
+                                test_size=0.20, random_state=42)
 
-rf = RandomForestClassifier()
+for i in classifiers:
+    """
+    if i not in ['MLPClassifier']:
+        c, parameters = CLASSIFIER_SELECTION(i)
+    
+        gs = GridSearchCV(c, parameters, cv=5)
+        #clf = gs.best_params_
+        gs.fit(X_train, y_train)
+        print(gs.best_params_)
+        y_pred = gs.predict(X_test)
+    
+        ACCURACY_EVAL(y_test, y_pred, i)
+    else:"""
+    c, parameters = CLASSIFIER_SELECTION(i)
+    
+    clf = GridSearchCV(c, parameters, cv=5)
+    
+    clf.fit(X_train_s, y_train_s)
+    y_pred = clf.predict(X_test_s)
+    
+    ACCURACY_EVAL(y_test_s, y_pred, i)
 
-parameters = {'n_estimators': [10, 50, 100, 1000], 
-              'max_depth': [10, 100, None],
-              'max_features': ['auto', 'sqrt', 'log2', None]}
-
-clf = GridSearchCV(rf, parameters, cv=5)
-
-
-
-#clf = svm.SVC(C=1000, cache_size=2000)
-
-#clf = MLPClassifier(hidden_layer_sizes=(500, 500, 500), solver='logistic', 
- #                   verbose= True, max_iter=200, learning_rate_init=0.00001)
-#
-clf.fit(X_train, y_train)
-y_pred = clf.predict(X_test)
-
-ACCURACY_EVAL(y_test, y_pred)
-
-
-
-
-
-
-
-
-
+    #clf.get_params()
+"""
+from sklearn.linear_model import SGDClassifier
+c = RandomForestClassifier()
+#c = svm.SVC()
+ad = AdaBoostClassifier(c)
+ad.fit(X_train_s, y_train_s)
+y_pred = ad.predict(X_test_s)
+ACCURACY_EVAL(y_test_s, y_pred, 'ada')
+""""
 
 
 
