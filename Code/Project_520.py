@@ -63,6 +63,9 @@ def ONE_HOT_ENCODING(dataframe, column, name):
 
 
 def ACCURACY_EVAL(y_true, y_pred, classifier):
+    """ This function claculates the total error rate, 
+    balanced error rate and plots a confusion matrix"""
+    
     ter = (100 - accuracy_score(y_true, y_pred) *100)
     print('Total error rate:', ter)
     print(confusion_matrix(y_true, y_pred))
