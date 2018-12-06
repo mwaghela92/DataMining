@@ -200,7 +200,7 @@ for i in classifiers:
         ter, ber = ACCURACY_EVAL(y_test, y_pred, i)
         ac_scores['Total Error Rate'] = ter
         ac_scores['Balanced Error Rate'] = ber
-        ac_scores['Mean CV score'] = (1-clf.best_score_ ) *100
+        ac_scores['Mean CV error'] = (1-clf.best_score_ ) *100
         accuracy_scores[i] = ac_scores
         
         best_parameters[i] = clf.best_params_
@@ -217,7 +217,7 @@ for i in classifiers:
         ter, ber = ACCURACY_EVAL(y_test_s, y_pred, i)
         ac_scores['Total Error Rate'] = ter
         ac_scores['Balanced Error Rate'] = ber
-        ac_scores['Mean CV score'] = (1-clf.best_score_ )*100
+        ac_scores['Mean CV error'] = (1-clf.best_score_ )*100
         accuracy_scores[i] = ac_scores
         
         best_parameters[i] = clf.best_params_
@@ -240,5 +240,5 @@ final_result['pred'] = test_prediction
 final_result.to_csv(Working_Directory + 'Results/' + file_name, 
                     header=None, index = False )
 
-
+print(accuracy_scores)
 
